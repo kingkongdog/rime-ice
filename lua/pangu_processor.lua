@@ -39,10 +39,11 @@ function M.func(key, env)
     -- 获取当前是否为英文模式 (Shift 切换后的状态)
     local is_ascii = context:get_option("ascii_mode")
 
-    -- 【场景 A】：非输入状态 (或是英文直输模式)
+    -- 【场景 A】：非输入状态 (或是英文直输模式)(此时编码栏为空，处理直接上屏的 标点/数字/英文)
     if not context:is_composing() then
-        -- 1. 在中文模式下，字母数字是编码的“种子”，不要覆写语境
-        -- (正则：只有当它是单个字母或数字，且不在英文模式时，才拦截)
+        -- 1. 在中文模式下，字母 [a-zA-Z] 是编码种子，不要覆写语境，也不要触发空格
+        -- (正则：只有当它是单个字母，且不在英文模式时，才拦截)
+        -- (注意：此处不包含数字，因为数字在非输入状态通常直接上屏)
         if not is_ascii and k:match("^[a-zA-Z]$") then
             return 2
         end
@@ -53,7 +54,7 @@ function M.func(key, env)
             return 2
         end
 
-        -- 3. 判定可见字符 (包括英文模式下的字母、以及各种直接上屏的标点)
+        -- 3. 判定可见字符 (标点、数字、英文模式下的字母)
         local is_visible = (k:len() == 1 and string.byte(k) > 32) or (string.byte(k, 1) > 127)
         
         if is_visible then
