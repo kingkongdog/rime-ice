@@ -101,7 +101,7 @@ function M.func(key, env)
     local is_digit = k:match("^[0-9]$")
     local is_minus = (k == 'minus')
     
-    if is_return or is_space or is_digit then
+    if is_return or is_space or is_digit or is_minus then
         local commit_text = ""
         if is_return then
             commit_text = context.input -- 回车上屏编码 (abc)
