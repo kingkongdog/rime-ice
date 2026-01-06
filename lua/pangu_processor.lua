@@ -43,7 +43,7 @@ function M.func(key, env)
     if not context:is_composing() then
         -- 1. 在中文模式下，字母数字是编码的“种子”，不要覆写语境
         -- (正则：只有当它是单个字母或数字，且不在英文模式时，才拦截)
-        if not is_ascii and k:match("^[a-zA-Z0-9]$") then
+        if not is_ascii and k:match("^[a-zA-Z]$") then
             return 2
         end
 
@@ -57,7 +57,18 @@ function M.func(key, env)
         local is_visible = (k:len() == 1 and string.byte(k) > 32) or (string.byte(k, 1) > 127)
         
         if is_visible then
-            -- 更新全局变量为当前按下的字符 (如逗号、英文模式下的 a)
+            -- 提取旧语境末尾字符
+            local last_char = get_last_char(env.last_text or "")
+            local type_left = get_char_type(last_char)
+            local type_right = get_char_type(k) -- 当前按下的键
+
+            -- 如果发生 中+英 或 英+中 冲突，补空格
+            if (type_left == "cn" and type_right == "en_num") or 
+               (type_left == "en_num" and type_right == "cn") then
+                engine:commit_text(" ")
+            end
+
+            -- 更新全局变量为当前按下的字符 (作为新语境)
             env.last_text = k
         else
             -- 真正的功能键按下（如非输入状态下的 Return 换行、Esc、BackSpace、Tab）
