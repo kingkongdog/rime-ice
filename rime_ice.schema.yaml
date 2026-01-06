@@ -278,8 +278,13 @@ key_binder:
   search: "`"             # 辅码引导符，要添加到 speller/alphabet
   # bindings:             # 也可以再增加方案专有的快捷键
   bindings:
-    - { accept: comma, send: Page_Up, when: has_menu }    # 逗号向上翻页
-    - { accept: period, send: Page_Down, when: has_menu } # 句号向下翻页
+    # 取消减号翻页：将 minus 映射回它自己，且不触发 Page_Up
+    - { accept: minus, send: minus, when: composing }
+    - { accept: equal, send: equal, when: composing }
+    
+    # 既然取消了减号翻页，建议同时开启逗号句号翻页作为替代
+    - { accept: comma, send: Page_Up, when: has_menu }
+    - { accept: period, send: Page_Down, when: has_menu }
 
 # editor 用来定制操作键的行为，以下是默认行为 https://github.com/rime/librime/blob/master/src/rime/gear/editor.cc
 editor:
