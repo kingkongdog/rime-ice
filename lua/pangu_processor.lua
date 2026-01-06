@@ -1,5 +1,12 @@
 local M = {}
 
+local function log(a, b)
+    local file_path = "/Users/ligang/Downloads/log"
+    local file, err = io.open(file_path, "a")  -- 关键："a" 追加模式
+    file:write(a,',', b,"\n")
+    file:close()
+end
+
 -- 1. 字符类型判定 (兼容 UTF-8 字节规律)
 local function get_char_type(char)
     if not char or char == "" then return "other" end
@@ -92,7 +99,8 @@ function M.func(key, env)
     local is_return = (k == "Return")
     local is_space = (k == "space")
     local is_digit = k:match("^[0-9]$")
-
+    local is_minus = (k == 'minus')
+    
     if is_return or is_space or is_digit then
         local commit_text = ""
         if is_return then
@@ -104,6 +112,9 @@ function M.func(key, env)
             local index = tonumber(k) - 1
             local target_cand = context:get_candidate_at(index)
             if target_cand then commit_text = target_cand.text end
+        elseif is_minus then
+            -- 如果按下了 - 号
+            commit_text = context.input -- 先取 abc
         end
 
         if commit_text ~= "" then
@@ -111,6 +122,18 @@ function M.func(key, env)
             local last_str = env.last_text or ""
 
             prepand_space(engine, last_str, commit_text)
+
+            if is_minus then
+                -- 1. 先把 abc 上屏
+                engine:commit_text(commit_text)
+                -- 2. 清空当前输入上下文
+                context:clear()
+                -- 3. 把标点符号上屏
+                engine:commit_text('-')
+                -- 4. 更新语境为该标点
+                env.last_text = '-'
+                return 1 -- 告诉 Rime 我们已经处理完了，不要再去翻页了
+            end
 
             -- 更新语境记录
             env.last_text = commit_text
