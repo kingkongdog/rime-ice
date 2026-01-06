@@ -114,8 +114,14 @@ function M.func(key, env)
         local current_str = get_punc_char(env, key)
         if current_str ~= "" then
             local last_str = env.last_text or ""
-            prepand_space(engine, last_str, current_str)
-            env.last_text = current_str
+            if last_str:match("^[0-9]$") and current_str == "。"  then
+                engine:commit_text('.')
+                env.last_text = '.'
+                return 1
+            else
+                prepand_space(engine, last_str, current_str)
+                env.last_text = current_str
+            end
         else
             env.last_text = nil
         end
