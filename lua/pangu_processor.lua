@@ -61,7 +61,8 @@ end
 local function get_punc_char(env, key)
     local context = env.engine.context
     local config = env.engine.schema.config
-    local keychar = string.char(key.keycode)
+    local keycode = key.keycode
+    local keychar = string.char(keycode)
     
     -- 1. 首先判定是否为物理上的“可见键位” (ASCII 32-126)
     -- 如果是功能键（如 Return, F1），直接返回空或原名，避免后续误判为 en_num
