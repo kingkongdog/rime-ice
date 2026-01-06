@@ -62,13 +62,14 @@ local function get_punc_char(env, key)
     local context = env.engine.context
     local config = env.engine.schema.config
     local keycode = key.keycode
-    local keychar = string.char(keycode)
     
     -- 1. 首先判定是否为物理上的“可见键位” (ASCII 32-126)
     -- 如果是功能键（如 Return, F1），直接返回空或原名，避免后续误判为 en_num
     if not is_visible_char(keycode) then
         return ''
     end
+    
+    local keychar = string.char(keycode)
 
     -- 2. 英文模式：直接返回 ASCII 字符
     if context:get_option("ascii_mode") then
@@ -110,7 +111,7 @@ function M.func(key, env)
         if not is_ascii and is_english_letter(keycode) then
             return 2
         end
-
+        
         local current_str = get_punc_char(env, key)
         if current_str ~= "" then
             local last_str = env.last_text or ""
