@@ -42,6 +42,7 @@ switches:
 engine:
   processors:
     - lua_processor@*select_character  # 以词定字
+    - lua_processor@*pangu_processor  # 添加这一行
     - ascii_composer
     - recognizer
     - key_binder
