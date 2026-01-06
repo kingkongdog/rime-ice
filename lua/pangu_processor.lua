@@ -67,8 +67,9 @@ function M.func(key, env)
             local target_cand = context:get_candidate_at(index)
             if target_cand then commit_text = target_cand.text end
         elseif k == "Return" then
-            -- 回车上屏编码
-            commit_text = context:get_commit_text()
+            -- 【关键修改】：回车时强制获取原始输入的编码（abc）
+            -- context.input 存储的是你键盘打下的原始序列
+            commit_text = context.input
         elseif k == "space" then
             -- 空格上屏选中的词
             if cand then commit_text = cand.text end
