@@ -28,6 +28,21 @@ local function get_last_char(s)
     return s:match("[%z\1-\127]$") or s:match("[\194-\244][\128-\191]*$") or ""
 end
 
+-- 判定是否需要补空格
+local function prepand_space(engine, last_text, current_text)
+    if not last_text or last_text == "" or not current_text or current_text == "" then return false end
+    local last_char = get_last_char(last_text)
+    local first_char = get_first_char(current_text)
+    
+    local last_type = get_char_type(last_char)
+    local curr_type = get_char_type(first_char)
+    
+    -- 判定：中+英 或 英+中
+    if (last_type == "cn" and curr_type == "en_num") or (last_type == "en_num" and curr_type == "cn") then
+        engine:commit_text(" ")
+    end
+end
+
 function M.func(key, env)
     local engine = env.engine
     local context = engine.context
@@ -59,17 +74,11 @@ function M.func(key, env)
         
         if is_visible then
             -- 提取旧语境末尾字符
-            local last_char = get_last_char(env.last_text or "")
-            local type_left = get_char_type(last_char)
-            local type_right = get_char_type(k) -- 当前按下的键
+            local last_str = env.last_text or ""
 
-            -- 如果发生 中+英 或 英+中 冲突，补空格
-            if (type_left == "cn" and type_right == "en_num") or 
-               (type_left == "en_num" and type_right == "cn") then
-                engine:commit_text(" ")
-            end
+            prepand_space(engine, last_str, k)
 
-            -- 更新全局变量为当前按下的字符 (作为新语境)
+             -- 更新全局变量为当前按下的字符 (作为新语境)
             env.last_text = k
         else
             -- 真正的功能键按下（如非输入状态下的 Return 换行、Esc、BackSpace、Tab）
@@ -100,17 +109,8 @@ function M.func(key, env)
         if commit_text ~= "" then
             -- 提取语境：旧语境末尾 vs 新文本开头
             local last_str = env.last_text or ""
-            local last_char = get_last_char(last_str)
-            local first_char = get_first_char(commit_text)
 
-            local type_left = get_char_type(last_char)
-            local type_right = get_char_type(first_char)
-
-            -- 判定补空格
-            if (type_left == "cn" and type_right == "en_num") or 
-               (type_left == "en_num" and type_right == "cn") then
-                engine:commit_text(" ")
-            end
+            prepand_space(engine, last_str, commit_text)
 
             -- 更新语境记录
             env.last_text = commit_text
