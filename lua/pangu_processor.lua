@@ -50,10 +50,48 @@ local function prepand_space(engine, last_text, current_text)
     end
 end
 
+local function is_visible_char(keycode)
+    return keycode >= 32 and keycode <= 126
+end
+
+local function is_english_letter(keycode)
+    return (keycode >= 65 and keycode <= 90) or (keycode >= 97 and keycode <= 122)
+end
+
+local function get_punc_char(env, key)
+    local context = env.engine.context
+    local config = env.engine.schema.config
+    local keychar = string.char(key.keycode)
+    
+    -- 1. 首先判定是否为物理上的“可见键位” (ASCII 32-126)
+    -- 如果是功能键（如 Return, F1），直接返回空或原名，避免后续误判为 en_num
+    if not is_visible_char(keycode) then
+        return ''
+    end
+
+    -- 2. 英文模式：直接返回 ASCII 字符
+    if context:get_option("ascii_mode") then
+        return keychar
+    end
+
+    -- 3. 中文模式：查标点映射表
+    local shape = context:get_option("full_shape") and "full_shape" or "half_shape"
+    local res = config:get_string("punctuator/" .. shape .. "/" .. keychar)
+    
+    if res then
+        -- 过滤掉列表形式的配置，只取第一个字符
+        return res:match("^[^%s]+") or res
+    end
+
+    -- 4. 兜底：既不是功能键，也没在标点表里（比如字母/数字），返回其 ASCII 字符
+    return keychar
+end
+
 function M.func(key, env)
     local engine = env.engine
     local context = engine.context
-    local k = key:repr()
+    local krepr = key:repr()
+    local keycode = key.keycode
 
     -- 过滤“松开按键”事件，防止逻辑触发两次
     if key:release() then return 2 end
@@ -62,44 +100,34 @@ function M.func(key, env)
     local is_ascii = context:get_option("ascii_mode")
 
     -- 【场景 A】：非输入状态 (或是英文直输模式)(此时编码栏为空，处理直接上屏的 标点/数字/英文)
+    -- 中文输入模式下，按下第一个字母，会触发该逻辑，候选词列表出现后不会继续触发
+    -- 中文输入模式下，只要候选词列表不出现，就会继续触发
+    -- 英文输入模式下，候选词列表永远不会出现，按下任何按键都会触发该逻辑
+    -- 所以 context:is_composing() 应该理解成，候选词列表是否出现，这个分支处理的就是候选词列表未出现时的按键逻辑
     if not context:is_composing() then
-        -- 1. 在中文模式下，字母 [a-zA-Z] 是编码种子，不要覆写语境，也不要触发空格
-        -- (正则：只有当它是单个字母，且不在英文模式时，才拦截)
-        -- (注意：此处不包含数字，因为数字在非输入状态通常直接上屏)
-        if not is_ascii and k:match("^[a-zA-Z]$") then
+        -- 中文输入状态按下第一个字母时，候选词列表还未出现，所以会进入该逻辑。不需要插入空格，不需要更新 env.last_text
+        if not is_ascii and is_english_letter(keycode) then
             return 2
         end
 
-        -- 2. 过滤掉纯修饰键本身 (Shift, Control, Alt 等)
-        -- 按下这些键不产生字符，也不应该清空语境
-        if k:find("Shift") or k:find("Control") or k:find("Alt") then
-            return 2
-        end
-
-        -- 3. 判定可见字符 (标点、数字、英文模式下的字母)
-        local is_visible = (k:len() == 1 and string.byte(k) > 32) or (string.byte(k, 1) > 127)
-        
-        if is_visible then
-            -- 提取旧语境末尾字符
+        local current_str = get_punc_char(env, key)
+        if current_str ~= "" then
             local last_str = env.last_text or ""
-
-            prepand_space(engine, last_str, k)
-
-             -- 更新全局变量为当前按下的字符 (作为新语境)
-            env.last_text = k
+            prepand_space(engine, last_str, current_str)
+            env.last_text = current_str
         else
-            -- 真正的功能键按下（如非输入状态下的 Return 换行、Esc、BackSpace、Tab）
-            -- 按照方案：彻底清空语境
             env.last_text = nil
         end
+
         return 2
     end
 
     -- 【场景 B】：输入状态 (正在输入拼音/编码)
-    local is_return = (k == "Return")
-    local is_space = (k == "space")
-    local is_digit = k:match("^[0-9]$")
-    local is_minus = (k == 'minus')
+    local is_return = (krepr == "Return")
+    local is_space = (krepr == "space")
+    local is_digit = krepr:match("^[0-9]$")
+    local is_minus = (krepr == 'minus')
+    -- TODO 发现还有一些别的标点也会触发上屏，可能大概也许也需要处理
     
     if is_return or is_space or is_digit or is_minus then
         local commit_text = ""
@@ -109,7 +137,7 @@ function M.func(key, env)
             local cand = context:get_selected_candidate()
             if cand then commit_text = cand.text end
         elseif is_digit then
-            local index = tonumber(k) - 1
+            local index = tonumber(krepr) - 1
             local target_cand = context:get_candidate_at(index)
             if target_cand then commit_text = target_cand.text end
         elseif is_minus then
