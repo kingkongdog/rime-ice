@@ -61,17 +61,15 @@ end
 local function prepend_space(env, last_text, current_text)
     local now = os.clock() * 1000
 
-    if now - env.last_time < 1000 then
-        if #last_text > 0 and #current_text > 0 then
-            local last_char = get_last_char(last_text)
-            local first_char = get_first_char(current_text)
-            
-            local last_type = get_char_type(last_char)
-            local curr_type = get_char_type(first_char)
-            -- 判定：中+英 或 英+中
-            if (last_type == "cn" and curr_type == "en_num") or (last_type == "en_num" and curr_type == "cn") then
-                env.engine:commit_text(" ")
-            end
+    if now - env.last_time < 1000 and #last_text > 0 and #current_text > 0 then
+        local last_char = get_last_char(last_text)
+        local first_char = get_first_char(current_text)
+        
+        local last_type = get_char_type(last_char)
+        local curr_type = get_char_type(first_char)
+        -- 判定：中+英 或 英+中
+        if (last_type == "cn" and curr_type == "en_num") or (last_type == "en_num" and curr_type == "cn") then
+            env.engine:commit_text(" ")
         end
     end
 end
