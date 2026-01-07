@@ -1,6 +1,6 @@
 local M = {}
 
--- TODO 把 last_text 改成 last_char
+-- TODO 理论上来说 last_text 只需要存储最后一个字符即可，把 last_text 改成 last_char
 function M.init(env)
     env.last_text = ""
     env.last_time = 0
