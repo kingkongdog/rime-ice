@@ -12,17 +12,28 @@ local function get_char_type(char)
     if not char or char == "" then return "other" end
     local byte = string.byte(char, 1)
 
-    -- 英文数字 (ASCII: 0-9, A-Z, a-z)
+    -- 1. 英文数字 (ASCII: 0-9, A-Z, a-z)
     if (byte >= 48 and byte <= 57) or (byte >= 65 and byte <= 90) or (byte >= 97 and byte <= 122) then
         return "en_num"
     end
 
-    -- 中文判定 (UTF-8 汉字首字节通常在 224-239 之间)
-    -- 这里通过排除法识别汉字，确保标点符号被分类为 other
-    if byte >= 224 and byte <= 239 then
-        return "cn"
+    -- 2. 中文汉字判定 (UTF-8 三字节序列)
+    if byte >= 224 and byte <= 239 and #char >= 3 then
+        -- 计算 Unicode 码位 (UTF-8 解码逻辑)
+        local b1 = byte
+        local b2 = string.byte(char, 2)
+        local b3 = string.byte(char, 3)
+        local codepoint = ((b1 % 16) * 4096) + ((b2 % 64) * 64) + (b3 % 64)
+
+        -- 常用汉字区间 [U+4E00, U+9FA5]
+        -- 扩展区 A [U+3400, U+4DBF]
+        if (codepoint >= 0x4E00 and codepoint <= 0x9FFF) or 
+           (codepoint >= 0x3400 and codepoint <= 0x4DBF) then
+            return "cn"
+        end
     end
 
+    -- 3. 其他（包括中文标点、英文标点、特殊符号）
     return "other"
 end
 
@@ -113,7 +124,7 @@ function M.func(key, env)
         end
         
         local current_str = get_punc_char(env, key)
-        if current_str ~= "" then
+        if current_str ~= "" then   -- 可见光标
             local last_str = env.last_text or ""
             if last_str:match("^[0-9]$") and current_str == "。"  then
                 engine:commit_text('.')
@@ -123,8 +134,15 @@ function M.func(key, env)
                 prepand_space(engine, last_str, current_str)
                 env.last_text = current_str
             end
-        else
-            env.last_text = nil
+        else    -- 非可见光标
+            -- 改变光标位置的需要把 env.last_text 置空
+            -- 这些按键包括：
+            -- 1. Tab、BackSpace、Enter、Delete、Home、End
+            -- 2. 方向键：Up 、Down 、Left 、Right，包括修饰键+方向键，如 Ctrl+Left，Super+Left，Shift+Left。其中 Ctrl+Left，Super+Left 只能捕获到 Ctrl 和 Super，没有 Left。Shift+Left 正常。只能妥协一下，用 find 方法了。只要按下 Super 就清空 last_text。
+            -- 3. 快捷键：全选 Command + A ，删除当前行 Command + X
+            if krepr == "Tab" or krepr == "BackSpace" or krepr == "Enter" or krepr == "Delete" or krepr == "Home" or krepr == "End" or krepr:find("Up") or krepr:find("Down") or krepr:find("Left") or krepr:find("Right") or krepr:find("Super") then
+                env.last_text = nil
+            end
         end
 
         return 2
