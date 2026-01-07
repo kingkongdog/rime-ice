@@ -6,6 +6,11 @@ function M.init(env)
     env.last_time = 0
 end
 
+local function updateLastText(env, text)
+    env.last_text = text
+    env.last_time = os.clock() * 1000
+end
+
 local function log(a, b)
     local file_path = "/Users/ligang/Downloads/log"
     local file, err = io.open(file_path, "a")  -- 关键："a" 追加模式
@@ -56,7 +61,7 @@ end
 local function prepend_space(env, last_text, current_text)
     local now = os.clock() * 1000
 
-    if now - env.last_time < 600 then
+    if now - env.last_time < 1000 then
         if #last_text > 0 and #current_text > 0 then
             local last_char = get_last_char(last_text)
             local first_char = get_first_char(current_text)
@@ -68,14 +73,7 @@ local function prepend_space(env, last_text, current_text)
                 env.engine:commit_text(" ")
             end
         end
-
-
-        env.last_text = current_text
-    else
-        env.last_text = ''
     end
-
-    env.last_time = os.clock() * 1000
 end
 
 local function is_visible_char(keycode)
@@ -145,11 +143,11 @@ function M.func(key, env)
             local last_str = env.last_text
             if last_str:match("^[0-9]$") and current_str == "。"  then
                 engine:commit_text('.')
-                env.last_text = '.'
-                env.last_time = os.clock() * 1000
+                updateLastText('.')
                 return 1
             else
                 prepend_space(env, last_str, current_str)
+                updateLastText(current_str)
             end
         else    -- 非可见光标
             -- 改变光标位置的需要把 env.last_text 置空
@@ -157,9 +155,8 @@ function M.func(key, env)
             -- 1. Tab、BackSpace、Enter、Delete、Home、End
             -- 2. 方向键：Up 、Down 、Left 、Right，包括修饰键+方向键，如 Ctrl+Left，Super+Left，Shift+Left。其中 Ctrl+Left，Super+Left 只能捕获到 Ctrl 和 Super，没有 Left。Shift+Left 正常。只能妥协一下，用 find 方法了。只要按下 Super 就清空 last_text。
             -- 3. 快捷键：全选 Command + A ，删除当前行 Command + X
-            if krepr == "Tab" or krepr == "BackSpace" or krepr == "Enter" or krepr == "Delete" or krepr == "Home" or krepr == "End" or krepr:find("Up") or krepr:find("Down") or krepr:find("Left") or krepr:find("Right") or krepr:find("Super") then
-                env.last_text = ''
-                env.last_time = os.clock() * 1000
+            if krepr == "Tab" or krepr == "BackSpace" or krepr == "Enter" or krepr == "Delete" or krepr == "Home" or krepr == "End" or krepr:find("Up") or krepr:find("Down") or krepr:find("Left") or krepr:find("Right") then
+                updateLastText('')
             end
         end
 
@@ -203,10 +200,12 @@ function M.func(key, env)
                 -- 3. 把标点符号上屏
                 engine:commit_text('-')
                 -- 4. 更新语境为该标点
-                env.last_text = '-'
-                env.last_time = os.clock() * 1000
+                updateLastText('-')
                 return 1 -- 告诉 Rime 我们已经处理完了，不要再去翻页了
             end
+
+            -- 更新语境记录
+            updateLastText(commit_text)
         end
     end
 
