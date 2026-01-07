@@ -146,11 +146,11 @@ function M.func(key, env)
             local last_str = env.last_text
             if last_str:match("^[0-9]$") and current_str == "。" then
                 engine:commit_text('.')
-                updateLastText('.')
+                updateLastText(env, '.')
                 return 1
             else
                 prepend_space(env, last_str, current_str)
-                updateLastText(current_str)
+                updateLastText(env, current_str)
             end
         else -- 非可见光标
             -- 改变光标位置的需要把 env.last_text 置空
@@ -160,7 +160,7 @@ function M.func(key, env)
             -- 3. 快捷键：全选 Command + A ，删除当前行 Command + X
             if krepr == "Tab" or krepr == "BackSpace" or krepr == "Enter" or krepr == "Delete" or krepr == "Home" or
                 krepr == "End" or krepr:find("Up") or krepr:find("Down") or krepr:find("Left") or krepr:find("Right") then
-                updateLastText('')
+                updateLastText(env, '')
             end
         end
 
@@ -208,12 +208,12 @@ function M.func(key, env)
                 -- 3. 把标点符号上屏
                 engine:commit_text('-')
                 -- 4. 更新语境为该标点
-                updateLastText('-')
+                updateLastText(env, '-')
                 return 1 -- 告诉 Rime 我们已经处理完了，不要再去翻页了
             end
 
             -- 更新语境记录
-            updateLastText(commit_text)
+            updateLastText(env, commit_text)
         end
     end
 
