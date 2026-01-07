@@ -8,7 +8,7 @@ end
 
 local function updateLastText(env, text)
     env.last_text = text
-    env.last_time = os.clock() * 1000
+    -- env.last_time = rime_api.get_time_ms()
 end
 
 local function log(a, b)
@@ -62,7 +62,8 @@ end
 local function prepend_space(env, last_text, current_text)
     local now = os.clock() * 1000
 
-    if now - env.last_time < 1000 and #last_text > 0 and #current_text > 0 then
+    -- if now - env.last_time < 1000 then 
+    if #last_text > 0 and #current_text > 0 then
         local last_char = get_last_char(last_text)
         local first_char = get_first_char(current_text)
 
@@ -73,6 +74,7 @@ local function prepend_space(env, last_text, current_text)
             env.engine:commit_text(" ")
         end
     end
+    -- end
 end
 
 local function is_visible_char(keycode)
