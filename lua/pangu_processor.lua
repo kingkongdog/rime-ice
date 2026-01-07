@@ -60,7 +60,7 @@ end
 
 -- 判定是否需要补空格
 local function prepend_space(env, last_text, current_text)
-    local now = os.clock() * 1000
+    -- local now = rime_api.get_time_ms()
 
     -- if now - env.last_time < 1000 then 
     if #last_text > 0 and #current_text > 0 then
