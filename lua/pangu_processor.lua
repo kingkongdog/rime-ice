@@ -13,14 +13,16 @@ end
 
 local function log(a, b)
     local file_path = "/Users/ligang/Downloads/log"
-    local file, err = io.open(file_path, "a")  -- 关键："a" 追加模式
-    file:write(a,',', b,"\n")
+    local file, err = io.open(file_path, "a") -- 关键："a" 追加模式
+    file:write(a, ',', b, "\n")
     file:close()
 end
 
 -- 1. 字符类型判定 (兼容 UTF-8 字节规律)
 local function get_char_type(char)
-    if not char or char == "" then return "other" end
+    if not char or char == "" then
+        return "other"
+    end
     local byte = string.byte(char, 1)
 
     -- 1. 英文数字 (ASCII: 0-9, A-Z, a-z)
@@ -38,8 +40,7 @@ local function get_char_type(char)
 
         -- 常用汉字区间 [U+4E00, U+9FA5]
         -- 扩展区 A [U+3400, U+4DBF]
-        if (codepoint >= 0x4E00 and codepoint <= 0x9FFF) or 
-           (codepoint >= 0x3400 and codepoint <= 0x4DBF) then
+        if (codepoint >= 0x4E00 and codepoint <= 0x9FFF) or (codepoint >= 0x3400 and codepoint <= 0x4DBF) then
             return "cn"
         end
     end
@@ -64,7 +65,7 @@ local function prepend_space(env, last_text, current_text)
     if now - env.last_time < 1000 and #last_text > 0 and #current_text > 0 then
         local last_char = get_last_char(last_text)
         local first_char = get_first_char(current_text)
-        
+
         local last_type = get_char_type(last_char)
         local curr_type = get_char_type(first_char)
         -- 判定：中+英 或 英+中
@@ -86,13 +87,13 @@ local function get_punc_char(env, key)
     local context = env.engine.context
     local config = env.engine.schema.config
     local keycode = key.keycode
-    
+
     -- 1. 首先判定是否为物理上的“可见键位” (ASCII 32-126)
     -- 如果是功能键（如 Return, F1），直接返回空或原名，避免后续误判为 en_num
     if not is_visible_char(keycode) then
         return ''
     end
-    
+
     local keychar = string.char(keycode)
 
     -- 2. 英文模式：直接返回 ASCII 字符
@@ -103,7 +104,7 @@ local function get_punc_char(env, key)
     -- 3. 中文模式：查标点映射表
     local shape = context:get_option("full_shape") and "full_shape" or "half_shape"
     local res = config:get_string("punctuator/" .. shape .. "/" .. keychar)
-    
+
     if res then
         -- 过滤掉列表形式的配置，只取第一个字符
         return res:match("^[^%s]+") or res
@@ -120,7 +121,9 @@ function M.func(key, env)
     local keycode = key.keycode
 
     -- 过滤“松开按键”事件，防止逻辑触发两次
-    if key:release() then return 2 end
+    if key:release() then
+        return 2
+    end
 
     -- 获取当前是否为英文模式 (Shift 切换后的状态)
     local is_ascii = context:get_option("ascii_mode")
@@ -135,11 +138,11 @@ function M.func(key, env)
         if not is_ascii and is_english_letter(keycode) then
             return 2
         end
-        
+
         local current_str = get_punc_char(env, key)
-        if current_str ~= "" then   -- 可见光标
+        if current_str ~= "" then -- 可见光标
             local last_str = env.last_text
-            if last_str:match("^[0-9]$") and current_str == "。"  then
+            if last_str:match("^[0-9]$") and current_str == "。" then
                 engine:commit_text('.')
                 updateLastText('.')
                 return 1
@@ -147,13 +150,14 @@ function M.func(key, env)
                 prepend_space(env, last_str, current_str)
                 updateLastText(current_str)
             end
-        else    -- 非可见光标
+        else -- 非可见光标
             -- 改变光标位置的需要把 env.last_text 置空
             -- 这些按键包括：
             -- 1. Tab、BackSpace、Enter、Delete、Home、End
             -- 2. 方向键：Up 、Down 、Left 、Right，包括修饰键+方向键，如 Ctrl+Left，Super+Left，Shift+Left。其中 Ctrl+Left，Super+Left 只能捕获到 Ctrl 和 Super，没有 Left。Shift+Left 正常。只能妥协一下，用 find 方法了。只要按下 Super 就清空 last_text。
             -- 3. 快捷键：全选 Command + A ，删除当前行 Command + X
-            if krepr == "Tab" or krepr == "BackSpace" or krepr == "Enter" or krepr == "Delete" or krepr == "Home" or krepr == "End" or krepr:find("Up") or krepr:find("Down") or krepr:find("Left") or krepr:find("Right") then
+            if krepr == "Tab" or krepr == "BackSpace" or krepr == "Enter" or krepr == "Delete" or krepr == "Home" or
+                krepr == "End" or krepr:find("Up") or krepr:find("Down") or krepr:find("Left") or krepr:find("Right") then
                 updateLastText('')
             end
         end
@@ -167,18 +171,22 @@ function M.func(key, env)
     local is_digit = krepr:match("^[0-9]$")
     local is_minus = (krepr == 'minus')
     -- TODO 发现还有一些别的标点也会触发上屏，可能大概也许也需要处理
-    
+
     if is_return or is_space or is_digit or is_minus then
         local commit_text = ""
         if is_return then
             commit_text = context.input -- 回车上屏编码 (abc)
         elseif is_space then
             local cand = context:get_selected_candidate()
-            if cand then commit_text = cand.text end
+            if cand then
+                commit_text = cand.text
+            end
         elseif is_digit then
             local index = tonumber(krepr) - 1
             local target_cand = context:get_candidate_at(index)
-            if target_cand then commit_text = target_cand.text end
+            if target_cand then
+                commit_text = target_cand.text
+            end
         elseif is_minus then
             -- 如果按下了 - 号
             commit_text = context.input -- 先取 abc
