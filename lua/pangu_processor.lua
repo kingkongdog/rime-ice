@@ -226,7 +226,7 @@ function M.func(key, env)
             end
 
             -- 更新语境记录
-            updateLastText(env, commit_text)
+            -- updateLastText(env, commit_text)
         end
     end
 
