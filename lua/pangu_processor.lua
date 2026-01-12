@@ -12,6 +12,25 @@ local function updateLastText(env, text)
     -- env.last_time = rime_api.get_time_ms()
 end
 
+local function get_candidate_at(env, index)
+    -- 1. 获取当前页的起始位置 (Offset)
+    -- 注意：不同版本的 librime-lua 获取 offset 的方式可能略有不同
+    -- 最通用的方法是从 context.composition 的当前 segment 中获取
+    local segment = env.context.composition:back()
+    local page_size = env.engine.schema.config:get_int("menu/page_size") or 8
+    log('page_size', page_size)
+    -- 计算当前页在全局候选列表中的起始索引
+    -- selected_index 是当前高亮词的全局索引，通过它可以推算出当前页的起点
+    local current_selected = env.context.selected_index
+    local page_start = math.floor(current_selected / page_size) * page_size
+        
+    -- 2. 计算目标词在全局列表中的索引
+    local target_index = page_start + (index - 1)
+        
+    -- 3. 准备并获取候选词
+    return segment.menu:get_candidate_at(target_index)
+end
+
 -- TODO 理论上来说 last_text 只需要存储最后一个字符即可，把 last_text 改成 last_char
 function M.init(env)
     env.last_text = ""
@@ -188,47 +207,44 @@ function M.func(key, env)
     local is_minus = (krepr == 'minus')
     -- TODO 发现还有一些别的标点也会触发上屏，可能大概也许也需要处理
 
-    if is_return or is_space or is_digit or is_minus then
-        local commit_text = ""
-        if is_return then
-            commit_text = context.input -- 回车上屏编码 (abc)
-        elseif is_space then
-            local cand = context:get_selected_candidate()
-            if cand then
-                commit_text = cand.text
-            end
-        elseif is_digit then
-            local index = tonumber(krepr) - 1
-            local target_cand = context:get_candidate_at(index)
-            if target_cand then
-                commit_text = target_cand.text
-            end
-        elseif is_minus then
-            -- 如果按下了 - 号
-            commit_text = context.input -- 先取 abc
+    local commit_text = ""
+
+    if is_return then
+        commit_text = context.input -- 回车上屏编码 (abc)
+    end
+    
+    if is_space then
+        local cand = context:get_selected_candidate()
+        if cand then
+            commit_text = cand.text
+        end
+    end
+
+    if is_digit then
+        local index = tonumber(krepr)
+
+        if index == 0 then
+            commit_text = context.input .. '0'
         end
 
-        if commit_text ~= "" then
-            -- 提取语境：旧语境末尾 vs 新文本开头
-            local last_str = env.last_text
-
-            prepend_space(env, last_str, commit_text)
-
-            if is_minus then
-                -- 1. 先把 abc 上屏
-                engine:commit_text(commit_text)
-                -- 2. 清空当前输入上下文
-                context:clear()
-                -- 3. 把标点符号上屏
-                engine:commit_text('-')
-                -- 4. 更新语境为该标点
-                updateLastText(env, '-')
-                return 1 -- 告诉 Rime 我们已经处理完了，不要再去翻页了
-            end
-
-            -- 更新语境记录
-            updateLastText(env, commit_text)
+        local target_cand = get_candidate_at(index)
+        if target_cand then
+            commit_text = target_cand.text
+        else
+            commit_text = context.input .. krepr
         end
+    end
+
+    if is_minus then
+        commit_text = context.input .. '-'
+    end
+
+    if commit_text ~= "" then
+        prepend_space(env, env.last_text, commit_text)
+        engine:commit_text(commit_text)
+        context:clear()
+        updateLastText(env, commit_text)
+        return 1
     end
 
     return 2
