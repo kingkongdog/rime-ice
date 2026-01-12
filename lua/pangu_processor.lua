@@ -187,10 +187,10 @@ function M.func(key, env)
         else -- 非可见光标
             -- 改变光标位置的需要把 env.last_text 置空
             -- 这些按键包括：
-            -- 1. Tab、BackSpace、Enter、Delete、Home、End
+            -- 1. Tab、BackSpace、Return、Delete、Home、End
             -- 2. 方向键：Up 、Down 、Left 、Right，包括修饰键+方向键，如 Ctrl+Left，Super+Left，Shift+Left。其中 Ctrl+Left，Super+Left 只能捕获到 Ctrl 和 Super，没有 Left。Shift+Left 正常。只能妥协一下，用 find 方法了。只要按下 Super 就清空 last_text。
             -- 3. 快捷键：全选 Command + A ，删除当前行 Command + X
-            if krepr == "Tab" or krepr == "BackSpace" or krepr == "Enter" or krepr == "Delete" or krepr == "Home" or
+            if krepr == "Tab" or krepr == "BackSpace" or krepr == "Return" or krepr == "Delete" or krepr == "Home" or
                 krepr == "End" or krepr:find("Up") or krepr:find("Down") or krepr:find("Left") or krepr:find("Right") then
                 updateLastText(env, '')
             end
