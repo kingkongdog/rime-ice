@@ -20,11 +20,15 @@ function M.init(env)
     -- 之前通过监听 space、return 等按键记录 last_text，鼠标点击上屏会记录不到。所以补充这个钩子注册。
     -- 核心：当 Rime 发生上屏动作时，自动触发这个回调
     -- 之前的逻辑也不能删，因为这个钩子是在上屏成功后执行的。
-    env.engine.context.commit_notifier:connect(function(ctx)
+    env.commit_notifier = env.engine.context.commit_notifier:connect(function(ctx)
         -- 这里拿到的就是真正上屏的字符串
         local text = ctx:get_commit_text()
         updateLastText(env, text)
     end)
+end
+
+function M.fini(env)
+   env.commit_notifier:disconnect()
 end
 
 -- 1. 字符类型判定 (兼容 UTF-8 字节规律)
