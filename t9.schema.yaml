@@ -76,8 +76,8 @@ key_binder:
     - { when: has_menu, accept: 1, send: apostrophe }
 
 speller:
-  alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA987654321
-  initials: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA987654321
+  alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA9876543210
+  initials: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA9876543210
   algebra:
     # ### 超级简拼
     - abbrev/^([a-z]).+$/$1/ # 超级简拼
