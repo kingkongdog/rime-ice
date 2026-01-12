@@ -1,5 +1,17 @@
 local M = {}
 
+local function updateLastText(env, text)
+    env.last_text = text
+    -- env.last_time = rime_api.get_time_ms()
+end
+
+local function log(a, b)
+    local file_path = "/Users/ligang/Downloads/log"
+    local file, err = io.open(file_path, "a") -- 关键："a" 追加模式
+    file:write(a, ',', b, "\n")
+    file:close()
+end
+
 -- TODO 理论上来说 last_text 只需要存储最后一个字符即可，把 last_text 改成 last_char
 function M.init(env)
     env.last_text = ""
@@ -13,18 +25,6 @@ function M.init(env)
         local text = ctx:get_commit_text()
         updateLastText(env, text)
     end)
-end
-
-local function updateLastText(env, text)
-    env.last_text = text
-    -- env.last_time = rime_api.get_time_ms()
-end
-
-local function log(a, b)
-    local file_path = "/Users/ligang/Downloads/log"
-    local file, err = io.open(file_path, "a") -- 关键："a" 追加模式
-    file:write(a, ',', b, "\n")
-    file:close()
 end
 
 -- 1. 字符类型判定 (兼容 UTF-8 字节规律)
