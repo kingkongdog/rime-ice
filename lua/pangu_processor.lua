@@ -20,6 +20,7 @@ function M.init(env)
     -- 之前通过监听 space、return 等按键记录 last_text，鼠标点击上屏会记录不到。所以补充这个钩子注册。
     -- 核心：当 Rime 发生上屏动作时，自动触发这个回调
     -- 之前的逻辑也不能删，因为这个钩子是在上屏成功后执行的。
+    -- 最下面的 updateLastText 不能删，因为手动调用 engine:commit_text 上屏不会触发 commit_notifier
     env.commit_notifier = env.engine.context.commit_notifier:connect(function(ctx)
         -- 这里拿到的就是真正上屏的字符串
         local text = ctx:get_commit_text()
@@ -226,7 +227,7 @@ function M.func(key, env)
             end
 
             -- 更新语境记录
-            -- updateLastText(env, commit_text)
+            updateLastText(env, commit_text)
         end
     end
 
