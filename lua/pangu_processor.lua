@@ -299,14 +299,14 @@ function M.func(key, env)
         end
     end
 
-    if is_period then
-        if at_last_page(env) then
-            local cand = context:get_selected_candidate()
-            if cand then
-                commit_text = cand.text .. '。'
-            end
-        end
-    end
+    -- if is_period then
+    --     if at_last_page(env) then
+    --         local cand = context:get_selected_candidate()
+    --         if cand then
+    --             commit_text = cand.text .. '。'
+    --         end
+    --     end
+    -- end
 
     if commit_text ~= "" then
         prepend_space(env, env.last_text, commit_text)
