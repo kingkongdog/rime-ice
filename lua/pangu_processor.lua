@@ -22,7 +22,7 @@ local function get_candidate_at(env, index_in_current_page)
     -- 注意：不同版本的 librime-lua 获取 offset 的方式可能略有不同
     -- 最通用的方法是从 context.composition 的当前 segment 中获取
     local segment = engine.context.composition:back()
-    local page_size = get_page_size()
+    local page_size = get_page_size(env)
     -- 计算当前页在全局候选列表中的起始索引
     -- selected_index 是当前高亮词的全局索引，通过它可以推算出当前页的起点
     local selected_candidate_index = segment.selected_index
@@ -41,7 +41,7 @@ local function at_first_page(env)
     -- 注意：不同版本的 librime-lua 获取 offset 的方式可能略有不同
     -- 最通用的方法是从 context.composition 的当前 segment 中获取
     local segment = engine.context.composition:back()
-    local page_size = get_page_size()
+    local page_size = get_page_size(env)
     -- 计算当前页在全局候选列表中的起始索引
     -- selected_index 是当前高亮词的全局索引，通过它可以推算出当前页的起点
     local selected_candidate_index = segment.selected_index
@@ -56,7 +56,7 @@ local function at_last_page(env)
     -- 注意：不同版本的 librime-lua 获取 offset 的方式可能略有不同
     -- 最通用的方法是从 context.composition 的当前 segment 中获取
     local segment = engine.context.composition:back()
-    local page_size = get_page_size()
+    local page_size = get_page_size(env)
     -- 计算当前页在全局候选列表中的起始索引
     -- selected_index 是当前高亮词的全局索引，通过它可以推算出当前页的起点
     local selected_candidate_index = segment.selected_index
@@ -265,7 +265,7 @@ function M.func(key, env)
     if is_digit then
         local digit = tonumber(krepr)
 
-        if digit == 0 or digit > get_page_size() then
+        if digit == 0 or digit > get_page_size(env) then
             commit_text = context.input .. digit
         else
             local target_cand = get_candidate_at(env, digit)
