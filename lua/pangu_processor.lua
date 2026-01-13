@@ -245,6 +245,8 @@ function M.func(key, env)
     local is_space = (krepr == "space")
     local is_digit = krepr:match("^[0-9]$")
     local is_minus = (krepr == 'minus')
+    local is_comma = (krepr == "comma")
+    local is_period = (krepr == "period")
     -- TODO 发现还有一些别的标点也会触发上屏，可能大概也许也需要处理
 
     local commit_text = ""
@@ -277,6 +279,20 @@ function M.func(key, env)
 
     if is_minus then
         commit_text = context.input .. '-'
+    end
+
+    if is_comma then
+        local cand = context:get_selected_candidate()
+        if cand and at_first_page(env) then
+            commit_text = cand.text .. '，'
+        end
+    end
+
+    if is_period then
+        local cand = context:get_selected_candidate()
+        if cand and at_last_page(env) then
+            commit_text = cand.text .. '。'
+        end
     end
 
     if commit_text ~= "" then
