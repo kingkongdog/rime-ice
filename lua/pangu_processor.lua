@@ -22,13 +22,15 @@ local function get_candidate_at(env, index_in_current_page)
     -- 注意：不同版本的 librime-lua 获取 offset 的方式可能略有不同
     -- 最通用的方法是从 context.composition 的当前 segment 中获取
     local segment = engine.context.composition:back()
+    local page_size = get_page_size()
     -- 计算当前页在全局候选列表中的起始索引
     -- selected_index 是当前高亮词的全局索引，通过它可以推算出当前页的起点
     local selected_candidate_index = segment.selected_index
     local page_start = selected_candidate_index - selected_candidate_index % get_page_size(env)
-        
+    -- local page_start = math.floor(selected_candidate_index / page_size) * page_size 与上面一行等价
+
     -- 2. 计算目标词在全局列表中的索引
-    local target_index = page_start + (index_in_current_page - 1)
+    local target_index = page_start + index_in_current_page - 1
         
     -- 3. 准备并获取候选词
     return segment.menu:get_candidate_at(target_index)
