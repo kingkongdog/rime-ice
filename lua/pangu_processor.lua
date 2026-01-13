@@ -50,6 +50,27 @@ local function at_first_page(env)
     return current_page_no == 1
 end
 
+local function at_last_page(env)
+    local engine = env.engine
+    -- 1. 获取当前页的起始位置 (Offset)
+    -- 注意：不同版本的 librime-lua 获取 offset 的方式可能略有不同
+    -- 最通用的方法是从 context.composition 的当前 segment 中获取
+    local segment = engine.context.composition:back()
+    local page_size = get_page_size()
+    -- 计算当前页在全局候选列表中的起始索引
+    -- selected_index 是当前高亮词的全局索引，通过它可以推算出当前页的起点
+    local selected_candidate_index = segment.selected_index
+    local current_page_no = math.ceil((selected_candidate_index + 1) / page_size)
+
+    -- 获取 Menu 对象
+    local menu = segment.menu
+    -- 获得（已加载）候选词数量
+    local loaded_candidate_count = menu:candidate_count()
+    local last_page_no = math.ceil((loaded_candidate_count) / page_size)
+
+    return current_page_no == last_page_no
+end
+
 -- TODO 理论上来说 last_text 只需要存储最后一个字符即可，把 last_text 改成 last_char
 function M.init(env)
     env.last_text = ""
