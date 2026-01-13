@@ -12,7 +12,11 @@ local function updateLastText(env, text)
     -- env.last_time = rime_api.get_time_ms()
 end
 
-local function get_candidate_at(env, index_in_current_page, page_size)
+local function get_page_size(env)
+    return env.engine.schema.config:get_int("menu/page_size")
+end
+
+local function get_candidate_at(env, index_in_current_page)
     local engine = env.engine
     -- 1. 获取当前页的起始位置 (Offset)
     -- 注意：不同版本的 librime-lua 获取 offset 的方式可能略有不同
@@ -21,7 +25,7 @@ local function get_candidate_at(env, index_in_current_page, page_size)
     -- 计算当前页在全局候选列表中的起始索引
     -- selected_index 是当前高亮词的全局索引，通过它可以推算出当前页的起点
     local selected_candidate_index = segment.selected_index
-    local page_start = selected_candidate_index - selected_candidate_index % page_size
+    local page_start = selected_candidate_index - selected_candidate_index % get_page_size(env)
         
     -- 2. 计算目标词在全局列表中的索引
     local target_index = page_start + (index_in_current_page - 1)
@@ -221,12 +225,11 @@ function M.func(key, env)
 
     if is_digit then
         local digit = tonumber(krepr)
-        local page_size = engine.schema.config:get_int("menu/page_size")
 
-        if digit == 0 or digit > page_size then
+        if digit == 0 or digit > get_page_size() then
             commit_text = context.input .. digit
         else
-            local target_cand = get_candidate_at(env, digit, page_size)
+            local target_cand = get_candidate_at(env, digit)
             if target_cand then
                 commit_text = target_cand.text
             else
