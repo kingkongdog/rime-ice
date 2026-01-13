@@ -66,9 +66,18 @@ local function at_last_page(env)
     local menu = segment.menu
     -- 获得（已加载）候选词数量
     local loaded_candidate_count = menu:candidate_count()
-    local last_page_no = math.ceil((loaded_candidate_count) / page_size)
 
-    return current_page_no == last_page_no
+    if loaded_candidate_count < current_page_no * page_size then
+        return true
+    elseif loaded_candidate_count > current_page_no * page_size then
+        return false
+    else 
+        local prepare_count = menu:prepare(loaded_candidate_count + 1)
+        if prepare_count > loaded_candidate_count then
+            return false
+        end
+        return true
+    end
 end
 
 -- TODO 理论上来说 last_text 只需要存储最后一个字符即可，把 last_text 改成 last_char
