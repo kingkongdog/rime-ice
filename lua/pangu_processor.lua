@@ -282,16 +282,20 @@ function M.func(key, env)
     end
 
     if is_comma then
-        local cand = context:get_selected_candidate()
-        if cand and at_first_page(env) then
-            commit_text = cand.text .. '，'
+        if at_first_page(env) then
+            local cand = context:get_selected_candidate()
+            if cand then
+                commit_text = cand.text .. '，'
+            end
         end
     end
 
     if is_period then
-        local cand = context:get_selected_candidate()
-        if cand and at_last_page(env) then
-            commit_text = cand.text .. '。'
+        if at_last_page(env) then
+            local cand = context:get_selected_candidate()
+            if cand then
+                commit_text = cand.text .. '。'
+            end
         end
     end
 
