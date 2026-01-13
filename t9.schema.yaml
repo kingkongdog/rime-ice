@@ -74,7 +74,7 @@ punctuator:
 # 输入时按 1 可以分词
 key_binder:
   bindings:
-    - { when: has_menu, accept: 1, send: apostrophe }
+    # - { when: has_menu, accept: 1, send: apostrophe }
 
 speller:
   alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA9876543210
