@@ -80,14 +80,22 @@ local function at_last_page(env)
     end
 end
 
-local function is_last_segment(env)
-    local context = env.engine.context
-    local seg = context.composition:back()
+-- 为什么这个方法不行？因为 segment 是动态调整的，比如输入 bixian，现在引擎处理为只有一个 segment，所以在选择必时就直接返回 true 了。
+-- 实际上选择必之后，引擎发现还有 input 没有处理完，会继续分词。
+-- local function is_last_segment(env)
+--     local context = env.engine.context
+--     local seg = context.composition:back()
 
-    -- 判断当前选中的候选词是否刚好消耗了输入框里剩下的所有字符
-    local is_full_match = (seg.end_pos == #context.input)
+--     -- 判断当前选中的候选词是否刚好消耗了输入框里剩下的所有字符
+--     local is_full_match = (seg.end_pos == #context.input)
 
-    return is_full_match
+--     return is_full_match
+-- end
+
+local function is_last_segment(env, cand)
+    log('cand._end', cand._end)
+    log('#env.engine.context.input', #env.engine.context.input)
+    return cand._end == #env.engine.context.input
 end
 
 -- TODO 理论上来说 last_text 只需要存储最后一个字符即可，把 last_text 改成 last_char
@@ -274,24 +282,22 @@ function M.func(key, env)
         commit_text = context.input -- 回车上屏编码 (abc)
     end
     
-    if is_space and is_last_segment(env) then
+    if is_space then
         local cand = context:get_selected_candidate()
-        if cand then
-            commit_text = context:get_commit_text() .. cand.text
+        if cand and is_last_segment(env, cand) then
+            commit_text = context:get_commit_text()  -- 注意这里 context:get_commit_text() 已经把选中的候选词拼接上了
         end
     end
 
-    if is_digit and is_last_segment(env) then
+    if is_digit then
         local digit = tonumber(krepr)
 
         if digit == 0 or digit > get_page_size(env) then
             commit_text = context.input .. digit
         else
             local target_cand = get_candidate_at(env, digit)
-            if target_cand then
-                commit_text = context:get_commit_text() .. target_cand.text
-            else
-                commit_text = context.input .. digit
+            if target_cand and is_last_segment(env, target_cand) then
+                commit_text = context:get_commit_text()
             end
         end
     end
