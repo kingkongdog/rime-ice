@@ -32,7 +32,7 @@ local function get_candidate_at(env, index_in_current_page)
     local target_index = (current_page_no - 1) * page_size + index_in_current_page - 1
         
     -- 3. 准备并获取候选词
-    return target_index, segment.menu:get_candidate_at(target_index)
+    return segment.menu:get_candidate_at(target_index)
 end
 
 local function at_first_page(env)
@@ -259,7 +259,6 @@ function M.func(key, env)
     -- TODO 发现还有一些别的标点也会触发上屏，可能大概也许也需要处理
 
     local commit_text = ""
-    local cand_index
 
     if is_return then
         commit_text = context.input -- 回车上屏编码 (abc)
@@ -278,8 +277,7 @@ function M.func(key, env)
         if digit == 0 or digit > get_page_size(env) then
             commit_text = context.input .. digit
         else
-            local target_index, target_cand = get_candidate_at(env, digit)
-            cand_index = target_index
+            local target_cand = get_candidate_at(env, digit)
             if target_cand then
                 commit_text = target_cand.text
             else
@@ -312,16 +310,8 @@ function M.func(key, env)
 
     if commit_text ~= "" then
         prepend_space(env, env.last_text, commit_text)
-
-        if is_space then
-            context.confirm_current_selection()
-        elseif is_digit then
-            context.select(cand_index)
-        else
-            engine:commit_text(commit_text)
-            context:clear()
-        end
-
+        engine:commit_text(commit_text)
+        context:clear()
         updateLastText(env, commit_text)
         return 1
     end
