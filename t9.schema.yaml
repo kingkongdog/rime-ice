@@ -46,7 +46,7 @@ engine:
   filters:
     - simplifier@emoji # Emoji
     - simplifier@traditionalize # 简繁切换
-    # - lua_filter@*put_input_in_cand_list_when_empty_filter
+    - lua_filter@*put_input_in_cand_list_when_empty_filter
     - uniquifier # 去重
 
 translator:
