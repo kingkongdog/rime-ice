@@ -312,6 +312,8 @@ function M.func(key, env)
                 -- local input_code = context.input:sub(segment.start_pos + 1, segment.end_pos)
                 -- committed_text = preedit_text:sub(1, #preedit_text - #input_code)
 
+                -- 3. 其实还有第三个方法：循环遍历 segments
+
                 commit_text = committed_text .. target_cand.text
             end
         end
