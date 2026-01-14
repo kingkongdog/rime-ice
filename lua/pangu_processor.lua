@@ -285,7 +285,7 @@ function M.func(key, env)
     if is_space then
         local cand = context:get_selected_candidate()
         if cand and is_last_segment(env, cand) then
-            -- 注意这里 context:get_commit_text() 获取到的值已经把选中的候选词拼接上了，真是奇怪的方法。
+            -- 注意这里 context:get_commit_text() 获取到的值已经把选中的候选词拼接到尾部上了，真是奇怪的方法。
             -- 但是下面 is_digit 就不能直接使用 context:get_commit_text() 了，因为选中的候选词跟数字对应的候选词可以不是同一个
             commit_text = context:get_commit_text()
         end
@@ -299,7 +299,20 @@ function M.func(key, env)
         else
             local target_cand = get_candidate_at(env, digit)
             if target_cand and is_last_segment(env, target_cand) then
-                commit_text = context:get_commit_text()
+                local committed_text = context:get_commit_text()
+                -- commit_text = context:get_commit_text()，context:get_commit_text() 尾部自动拼接了当前选中的候选词，所以不能直接用
+                -- 我现在有两个方法：下面代码都是用的 sub 截取的方法，lua 也有类似 js 的 replace 的方法 gsub，但是说 sub 的性能更好
+                -- 1. context:get_commit_text() 把 context:get_selected_candidate() 从尾部 replace 成 target_cand
+                local selected_cand = context:get_selected_candidate()
+                committed_text = committed_text:sub(1, #committed_text - #selected_cand.text)
+                
+                -- 2. 不用 context:get_commit_text()，用 context:get_preedit().text 把 英文字母 从尾部 replace 成 target_cand
+                -- local preedit_text = context:get_preedit().text
+                -- local segment = context.composition:back()
+                -- local input_code = context.input:sub(segment.start_pos + 1, segment.end_pos)
+                -- committed_text = preedit_text:sub(1, #preedit_text - #input_code)
+
+                commit_text = committed_text .. target_cand.text
             end
         end
     end
