@@ -285,7 +285,9 @@ function M.func(key, env)
     if is_space then
         local cand = context:get_selected_candidate()
         if cand and is_last_segment(env, cand) then
-            commit_text = context:get_commit_text()  -- 注意这里 context:get_commit_text() 已经把选中的候选词拼接上了
+            -- 注意这里 context:get_commit_text() 获取到的值已经把选中的候选词拼接上了，真是奇怪的方法。
+            -- 但是下面 is_digit 就不能直接使用 context:get_commit_text() 了，因为选中的候选词跟数字对应的候选词可以不是同一个
+            commit_text = context:get_commit_text()
         end
     end
 
