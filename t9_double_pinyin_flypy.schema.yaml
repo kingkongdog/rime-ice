@@ -11,7 +11,7 @@ __include: double_pinyin_flypy.schema.yaml:/
 
 schema:
   schema_id: t9_double_pinyin_flypy
-  name: 小鹤双拼·九宫格
+  name: 小鹤双拼·T9
   version: "0.0.1"
   author:
     - kingkong
