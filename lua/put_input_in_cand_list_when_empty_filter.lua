@@ -1,4 +1,6 @@
-local function filter(input, env)
+local M = {}
+
+function M.func(input, env)
     local has_cand = false
     
     -- 尝试获取第一个候选词
@@ -16,4 +18,4 @@ local function filter(input, env)
     end
 end
 
-return filter
+return M
