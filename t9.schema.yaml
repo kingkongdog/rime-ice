@@ -23,6 +23,7 @@ schema:
 
 engine:
   processors:
+    - lua_processor@*force_digit_input_processor
     - ascii_composer
     - recognizer
     - key_binder
