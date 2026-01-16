@@ -323,10 +323,7 @@ function M.func(key, env)
 
     if is_comma then
         if at_first_page(env) then
-            local cand = context:get_selected_candidate()
-            if cand then
-                commit_text = cand.text .. '，'
-            end
+            commit_text = context:get_commit_text() .. '，'
         end
     end
 
