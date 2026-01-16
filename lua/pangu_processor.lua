@@ -100,6 +100,9 @@ end
 function M.init(env)
     env.last_text = ""
     env.last_time = 0
+    -- 什么时候设置 true？composing状态按下句号置为 true。什么时候设置 false？非 composing状态按下按下任何按键置为 false。
+    -- 比如在 composing 状态，按下句号，值变成 true。按下空格上屏，值还是 true。开始下次输入，输入第一个字母比如 k，注意这时会走进非 composing 分支，值变成 false，恰好满足我们要的逻辑。
+    env.page_changed = false
 
     -- 之前通过监听 space、return 等按键记录 last_text，鼠标点击上屏会记录不到。所以补充这个钩子注册。
     -- 核心：当 Rime 发生上屏动作时，自动触发这个回调
@@ -234,6 +237,7 @@ function M.func(key, env)
     -- 英文输入模式下，候选词列表永远不会出现，按下任何按键都会触发该逻辑
     -- 所以 context:is_composing() 应该理解成，候选词列表是否出现，这个分支处理的就是候选词列表未出现时的按键逻辑
     if not context:is_composing() then
+        env.page_changed = false
         -- 中文输入状态按下第一个字母时，候选词列表还未出现，所以会进入该逻辑。不需要插入空格，不需要更新 env.last_text
         if not is_ascii and is_english_letter(keycode) then
             return 2
@@ -321,20 +325,16 @@ function M.func(key, env)
         commit_text = context.input .. '-'
     end
 
+    -- 当用户输入拼音后，如果没有对候选词进行过翻页，按下逗号直接上屏 preedit，加上逗号，如果对候选词进行过翻页，在第一页按逗号没有反应。这个逻辑跟 sogou 是一致的。
     if is_comma then
-        if at_first_page(env) then
+        if at_first_page(env) and not env.page_changed then
             commit_text = context:get_commit_text() .. '，'
         end
     end
 
-    -- if is_period then
-    --     if at_last_page(env) then
-    --         local cand = context:get_selected_candidate()
-    --         if cand then
-    --             commit_text = cand.text .. '。'
-    --         end
-    --     end
-    -- end
+    if is_period then
+        env.page_changed = true
+    end
 
     if commit_text ~= "" then
         prepend_space(env, env.last_text, commit_text)
