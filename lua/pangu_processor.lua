@@ -93,8 +93,6 @@ end
 -- end
 
 local function is_last_segment(env, cand)
-    log('cand._end', cand._end)
-    log('#env.engine.context.input', #env.engine.context.input)
     return cand._end == #env.engine.context.input
 end
 
