@@ -103,5 +103,3 @@ speller:
     - derive/[pqrs]/7/
     - derive/[tuv]/8/
     - derive/[wxyz]/9/
-    # ### 支持英文
-    - xlit/abcdefghijklmnopqrstuvwxyz/22233344455566677778889999/
