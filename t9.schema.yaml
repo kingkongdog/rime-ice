@@ -35,7 +35,7 @@ engine:
     - ascii_composer
     - recognizer
     - key_binder
-    # - lua_processor@*force_digit_input_processor
+    - lua_processor@*force_digit_input_processor
     - speller
     - punctuator
     - selector
