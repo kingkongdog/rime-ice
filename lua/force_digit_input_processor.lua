@@ -9,7 +9,7 @@ function M.func(key, env)
     -- 这里不要用 key:repr()，否则可能推入 Shift+1
     -- context:push_input(string.char(code))
     context:push_input("9")
-    return 2
+    return 1
   end
 
   return 2
