@@ -117,14 +117,15 @@ speller:
     - derive/ao$/oa/
     - derive/([iu])a(o|ng?)$/a$1$2/
     # ### 九宫格数字映射
-    - derive/[abc]/2/
-    - derive/[def]/3/
-    - derive/[hgi]/4/
-    - derive/[jkl]/5/
-    - derive/[omn]/6/
-    - derive/[pqrs]/7/
-    - derive/[tuv]/8/
-    - derive/[wxyz]/9/
+    # - derive/[abc]/2/
+    # - derive/[def]/3/
+    # - derive/[hgi]/4/
+    # - derive/[jkl]/5/
+    # - derive/[omn]/6/
+    # - derive/[pqrs]/7/
+    # - derive/[tuv]/8/
+    # - derive/[wxyz]/9/
+    - xlit/abcdefghijklmnopqrstuvwxyz/22233344455566677778889999/
 
 grammar:
   language: wanxiang-lts-zh-hans
