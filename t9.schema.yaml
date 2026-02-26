@@ -31,11 +31,11 @@ schema:
 
 engine:
   processors:
+    - lua_processor@*force_digit_input_processor
     - t9_processor
     - ascii_composer
     - recognizer
     - key_binder
-    - lua_processor@*force_digit_input_processor
     - speller
     - punctuator
     - selector
@@ -56,10 +56,13 @@ engine:
     - lua_translator@*calc_translator    # 计算器
     - lua_translator@*force_gc           # 暴力 GC
   filters:
+    - lua_filter@*english_filter                    # 输入 2 个及 2 个以上英文字母才显示英文候选词。不加这个的话，输入第一个字母的时候挺卡的。
     - simplifier@emoji # Emoji
     - simplifier@traditionalize # 简繁切换
+    - lua_filter@*prepend_digit_filter
     - lua_filter@*put_input_in_cand_list_when_empty_filter
     - uniquifier # 去重
+    - lua_filter@*t9_sorter                         #万象T9排序器，根据首个候选词长度动态调整后续单字排序方式：1️⃣ 第一个候选词是单个汉字或者表情的，从第9个候选词开始按拼音升序排序，2️⃣ 第一个候选词是多个汉字的，已知单个汉字的候选词都排在后面，从第一个单字候选词开始按拼音排序。https://gemini.google.com/share/efd91333894c
 
 calculator:
   prefix: =
